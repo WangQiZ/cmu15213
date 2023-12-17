@@ -153,7 +153,7 @@ int bitXor(int x, int y) {
  */
 int tmin(void) {
 
-  return 2;
+  return 1 << 31;
 
 }
 //2
@@ -165,7 +165,7 @@ int tmin(void) {
  *   Rating: 1
  */
 int isTmax(int x) {
-  return 2;
+  return !(x ^ (~(1<<31)));
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -209,7 +209,11 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+    int is_zero = !(x^0x0); // if x = 0 is_zero = 1   all_z = 1111 -> -y x = 1 is_z = 0 all_z = 0
+    int all_one_or_zero = ~is_zero+1;
+    int case_negy = ~(y & all_one_or_zero) + 1;
+    int case_negz = ~(z & ~all_one_or_zero) + 1;
+    return y + z + case_negy + case_negz;
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -219,7 +223,15 @@ int conditional(int x, int y, int z) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+    // need to consider that y is neg or x is neg so x-y may overflow
+    int sign_x = (x >> 31) & 0x1;
+    int sign_y = (y >> 31) & 0x1;
+    int diff_sign = sign_x ^ sign_y;
+    int same_sign = ~(~diff_sign + 1);
+    int sub = x + (~y + 1); //x-y<0  sub_sign = 1 x-y>=0 sub_sign=0
+    int sub_sign = (sub >> 31) & 0x1;
+
+    return (diff_sign & (!sign_y)) + (same_sign & (sub_sign +(!(x ^ y)) ));
 }
 //4
 /* 
@@ -231,7 +243,10 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+     int sign = (x >> 31) & 0x1;
+     int sign_is_zero = ~(~sign + 1); //if sign = 0; sign_ = 111111111111;
+     int neg_x = ((~x + 1) >> 31) & 0x1;
+     return sign_is_zero & (neg_x ^ 0x1);
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
